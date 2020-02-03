@@ -660,13 +660,15 @@ void PROXY_Init(void)
 
     // Fork / Exec the actual process
     // TODO: Event for fork / exec issues
+
+    // Proxy and the application need to be in the same directory to see the ipc file
+    chdir("cf/apps");
+
     childPID = fork();
     if (childPID >= 0)
     { // Forked
         if (childPID == 0)
         { // Child process
-            //exit(0); // exit child to force errors. TODO: remove
-            chdir("cf/apps");
             if (-1 == execl("actual_app", "actual_app", NULL))
             {
                 // I don't know how to indicate that this has happened.
@@ -700,6 +702,8 @@ void PROXY_Init(void)
     {
         printf("nng_listen: %d\n", rv);
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
+    } else {
+        printf("(PROXY) listening on %s\n", url);
     }
     if ((rv = nng_setopt_ms(sock, NNG_OPT_RECVTIMEO, ACTUAL_NNG_TIMEOUT)) != 0)
     {
