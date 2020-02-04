@@ -27,6 +27,7 @@
 #include "proxy_msg.h"
 #include "proxy_events.h"
 #include "proxy_version.h"
+#include "proxy_defs.h"
 
 #include <signal.h>
 
@@ -40,10 +41,6 @@
 #define ns(x) FLATBUFFERS_WRAP_NAMESPACE(cFS_API, x)
 #undef nsr
 #define nsr(x) FLATBUFFERS_WRAP_NAMESPACE(cFS_Return, x)
-
-#define VERBOSE 0
-// Proxy blocks on the NNG calls, so this impacts Proxy's run loop
-#define ACTUAL_NNG_TIMEOUT 500
 
 #define ACTUAL_STATE_UNKOWN    1
 #define ACTUAL_STATE_RUNNING   2
@@ -60,7 +57,6 @@ CFE_SB_PipeId_t    PROXY_CommandPipe;
 CFE_SB_MsgPtr_t    PROXY_MsgPtr;
 
 nng_socket sock;
-char * url = "ipc://./pair.ipc";
 
 pid_t childPID;
 
@@ -669,7 +665,7 @@ void PROXY_Init(void)
     { // Forked
         if (childPID == 0)
         { // Child process
-            if (-1 == execl("actual_app", "actual_app", NULL))
+            if (-1 == execl(EXEC_INSTRUCTION, EXEC_ARGUMENTS, NULL))
             {
                 // I don't know how to indicate that this has happened.
                 // A child process can not write to the parent's memory (so HK telemetry won't work)
@@ -698,12 +694,12 @@ void PROXY_Init(void)
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
     // Listen doesn't timeout waiting for a connection.
-    if ((rv = nng_listen(sock, url, NULL, 0)) !=0)
+    if ((rv = nng_listen(sock, IPC_PIPE_ADDRESS, NULL, 0)) !=0)
     {
         printf("nng_listen: %d\n", rv);
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     } else {
-        printf("(PROXY) listening on %s\n", url);
+        printf("(PROXY) listening on %s\n", IPC_PIPE_ADDRESS);
     }
     if ((rv = nng_setopt_ms(sock, NNG_OPT_RECVTIMEO, ACTUAL_NNG_TIMEOUT)) != 0)
     {
