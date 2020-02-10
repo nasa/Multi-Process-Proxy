@@ -4,7 +4,7 @@
 // #define EXEC_INSTRUCTION "./actual_app"
 // #define EXEC_ARGUMENTS "actual_app"
 #define EXEC_INSTRUCTION "python"
-#define EXEC_ARGUMENTS "python", "python_test.py"
+#define EXEC_ARGUMENTS "python", "python_exploration/python_test.py"
 
 // Enable to get print messages for just about every remote function call
 #define VERBOSE 0
