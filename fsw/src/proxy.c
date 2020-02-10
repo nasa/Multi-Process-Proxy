@@ -665,7 +665,7 @@ void PROXY_Init(void)
     { // Forked
         if (childPID == 0)
         { // Child process
-            if (-1 == execl(EXEC_INSTRUCTION, EXEC_ARGUMENTS, NULL))
+            if (-1 == execlp(EXEC_INSTRUCTION, EXEC_ARGUMENTS, NULL))
             {
                 // I don't know how to indicate that this has happened.
                 // A child process can not write to the parent's memory (so HK telemetry won't work)

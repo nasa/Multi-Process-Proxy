@@ -1,8 +1,10 @@
 // run directory?
 
 // The program to exec after fork, and the command line arguments to pass
-#define EXEC_INSTRUCTION "actual_app"
-#define EXEC_ARGUMENTS "actual_app"
+// #define EXEC_INSTRUCTION "./actual_app"
+// #define EXEC_ARGUMENTS "actual_app"
+#define EXEC_INSTRUCTION "python"
+#define EXEC_ARGUMENTS "python", "python_test.py"
 
 // Enable to get print messages for just about every remote function call
 #define VERBOSE 0
