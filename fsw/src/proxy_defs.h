@@ -3,8 +3,10 @@
 // The program to exec after fork, and the command line arguments to pass
 // #define EXEC_INSTRUCTION "./actual_app"
 // #define EXEC_ARGUMENTS "actual_app"
-#define EXEC_INSTRUCTION "python"
-#define EXEC_ARGUMENTS "python", "python_exploration/python_test.py"
+// #define EXEC_INSTRUCTION "python"
+// #define EXEC_ARGUMENTS "python", "python_exploration/python_test.py"
+#define EXEC_INSTRUCTION "/usr/bin/xterm"
+#define EXEC_ARGUMENTS "xterm", "-hold", "-e", "python", "python_exploration/cfs_cli.py"
 
 // Enable to get print messages for just about every remote function call
 #define VERBOSE 0
