@@ -657,9 +657,6 @@ void PROXY_Init(void)
     // Fork / Exec the actual process
     // TODO: Event for fork / exec issues
 
-    // Proxy and the application need to be in the same directory to see the ipc file
-    chdir("cf");
-
     childPID = fork();
     if (childPID >= 0)
     { // Forked
