@@ -662,6 +662,7 @@ void PROXY_Init(void)
     { // Forked
         if (childPID == 0)
         { // Child process
+            // printf("The child has forked %d\n", getpid());
             if (-1 == execlp(EXEC_INSTRUCTION, EXEC_ARGUMENTS, NULL))
             {
                 // I don't know how to indicate that this has happened.
@@ -677,6 +678,26 @@ void PROXY_Init(void)
         PROXY_HkTelemetryPkt.proxy_fork_error = errno;
         printf("Fork error\n");
     }
+
+    // This code block is handy if the child process fails after the exec succeeds.
+    // Just waits on the process, prints the reason is died.
+    // Signal 11 (Seg Fault) may indicate you need to raise Proxy's stack size in the startup script
+    /*
+    int wstatus = 0;
+    int w = waitpid(childPID, &wstatus, WUNTRACED | WCONTINUED);
+    if (w == -1) {
+        perror("waitpid");
+        exit(EXIT_FAILURE);
+    }
+    if (WIFEXITED(wstatus)) {
+        printf("exited, status=%d\n", WEXITSTATUS(wstatus));
+    } else if (WIFSIGNALED(wstatus)) {
+        printf("killed by signal %d\n", WTERMSIG(wstatus));
+    } else if (WIFSTOPPED(wstatus)) {
+        printf("stopped by signal %d\n", WSTOPSIG(wstatus));
+    } else if (WIFCONTINUED(wstatus)) {
+        printf("continued\n");
+    } */
 
     // Flat Buff init
     flatcc_builder_init(&builder);
