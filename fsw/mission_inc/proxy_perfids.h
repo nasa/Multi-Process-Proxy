@@ -1,13 +1,15 @@
-/************************************************************************
-** File:
-**   $Id: proxy_perfids.h  $
+/*
+** GSC-18364-1, "Proxy Core Flight System Application and Client for External Process"
 **
-** Purpose:
-**  Define Proxy Performance IDs
+** Copyright © 2019 United States Government as represented by
+** the Administrator of the National Aeronautics and Space Administration.
+** No copyright is claimed in the United States under Title 17, U.S. Code.
+** All Other Rights Reserved.
 **
-** Notes:
-**
-*************************************************************************/
+** Licensed under the NASA Open Source Agreement version 1.3
+** See "NOSA GSC-18364-1.pdf"
+*/
+
 #ifndef _proxy_perfids_h_
 #define _proxy_perfids_h_
 
