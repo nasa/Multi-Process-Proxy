@@ -10,8 +10,8 @@
 ** See "NOSA GSC-18364-1.pdf"
 */
 
-#ifndef _proxy_msg_h_
-#define _proxy_msg_h_
+#ifndef proxy_msg_h
+#define proxy_msg_h
 
 /*
 ** Proxy command codes
@@ -56,4 +56,4 @@ typedef struct
 
 #define PROXY_HK_TLM_LNGTH   sizeof ( proxy_hk_tlm_t )
 
-#endif /* _proxy_msg_h_ */
+#endif /* proxy_msg_h */

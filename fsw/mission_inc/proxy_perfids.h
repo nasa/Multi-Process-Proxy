@@ -10,12 +10,12 @@
 ** See "NOSA GSC-18364-1.pdf"
 */
 
-#ifndef _proxy_perfids_h_
-#define _proxy_perfids_h_
+#ifndef proxy_perfids_h
+#define proxy_perfids_h
 
 #define PROXY_PERF_ID              92
 
-#endif /* _proxy_perfids_h_ */
+#endif /* proxy_perfids_h */
 
 /************************/
 /*  End of File Comment */

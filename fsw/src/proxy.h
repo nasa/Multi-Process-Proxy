@@ -10,8 +10,8 @@
 ** See "NOSA GSC-18364-1.pdf"
 */
 
-#ifndef _proxy_h_
-#define _proxy_h_
+#ifndef proxy_h
+#define proxy_h
 
 /*
 ** Required header files.
@@ -53,4 +53,4 @@ void cleanup_and_exit(uint32 RunStatus);
 void incoming_message(void);
 boolean PROXY_VerifyCmdLength(CFE_SB_MsgPtr_t msg, uint16 ExpectedLength);
 
-#endif /* _proxy_h_ */
+#endif /* proxy_h */

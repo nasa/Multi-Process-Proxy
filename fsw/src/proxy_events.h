@@ -10,8 +10,8 @@
 ** See "NOSA GSC-18364-1.pdf"
 */
 
-#ifndef _proxy_events_h_
-#define _proxy_events_h_
+#ifndef proxy_events_h
+#define proxy_events_h
 
 #define PROXY_RESERVED_EID              0
 #define PROXY_STARTUP_INF_EID           1
@@ -21,4 +21,4 @@
 #define PROXY_INVALID_MSGID_ERR_EID     5
 #define PROXY_LEN_ERR_EID               6
 
-#endif /* _proxy_events_h_ */
+#endif /* proxy_events_h */

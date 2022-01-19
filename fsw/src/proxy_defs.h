@@ -10,8 +10,8 @@
 ** See "NOSA GSC-18364-1.pdf"
 */
 
-#ifndef _proxy_defs_h_
-#define _proxy_defs_h_
+#ifndef proxy_defs_h
+#define proxy_defs_h
 
 // run directory?
 
@@ -32,4 +32,4 @@
 
 #define IPC_PIPE_ADDRESS "ipc://./cf/pair.ipc"
 
-#endif /* _proxy_defs_h_ */
+#endif /* proxy_defs_h */

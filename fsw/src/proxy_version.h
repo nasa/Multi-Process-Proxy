@@ -10,12 +10,12 @@
 ** See "NOSA GSC-18364-1.pdf"
 */
 
-#ifndef _proxy_version_h_
-#define _proxy_version_h_
+#ifndef proxy_version_h
+#define proxy_version_h
 
 #define PROXY_MAJOR_VERSION    1
 #define PROXY_MINOR_VERSION    0
 #define PROXY_REVISION         0
 #define PROXY_MISSION_REV      0
 
-#endif /* _proxy_version_h_ */
+#endif /* proxy_version_h */
