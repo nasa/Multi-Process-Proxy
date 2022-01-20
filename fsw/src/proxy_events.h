@@ -20,5 +20,8 @@
 #define PROXY_COMMANDRST_INF_EID        4
 #define PROXY_INVALID_MSGID_ERR_EID     5
 #define PROXY_LEN_ERR_EID               6
+#define PROXY_SHUTDOWN_INF_EID          7
+#define PROXY_NNG_ERR_EID               8
+#define PROXY_UNIMPLEMENTED_ERR_EID     9
 
 #endif /* proxy_events_h */

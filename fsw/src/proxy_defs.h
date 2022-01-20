@@ -13,13 +13,17 @@
 #ifndef proxy_defs_h
 #define proxy_defs_h
 
-// run directory?
-
 // The program to exec after fork, and the command line arguments to pass
+
+// Running a simple binary:
 // #define EXEC_INSTRUCTION "./cf/actual_app"
 // #define EXEC_ARGUMENTS "actual_app"
+
+// Running a python script:
 // #define EXEC_INSTRUCTION "python"
 // #define EXEC_ARGUMENTS "python", "cf/python_exploration/python_test.py"
+
+// Launching xterm (which then runs a python script)
 #define EXEC_INSTRUCTION "/usr/bin/xterm"
 #define EXEC_ARGUMENTS "xterm", "-fa", "'Monospace'", "-fs", "12", "-hold", "-e", "python", "cf/python_exploration/cfs_cli.py"
 

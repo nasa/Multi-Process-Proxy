@@ -76,8 +76,7 @@ static CFE_EVS_BinFilter_t  PROXY_EventFilters[] =
     };
 
 /** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* PROXY_Main() -- Application entry point and main process loop          */
-/*                                                                            */
+/* PROXY_Main() -- Application entry point and main process loop              */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * *  * * * * **/
 void PROXY_Main( void )
 {
@@ -113,7 +112,8 @@ void PROXY_Main( void )
         incoming_message();
     }
 
-    printf("PROXY Is about to die.\n");
+    CFE_EVS_SendEventWithAppID(PROXY_SHUTDOWN_INF_EID, CFE_EVS_INFORMATION, proxy_evs_id,
+                               "Pro Proxy Shutdown");
     kill(childPID, SIGKILL);
 
     cleanup_and_exit(RunStatus);
@@ -129,7 +129,6 @@ void cleanup_and_exit( uint32 RunStatus )
     // Clean up nng
     nng_close(sock);
 
-    printf("Proxy exiting.\n");
     CFE_ES_ExitApp(RunStatus);
 }
 
@@ -151,18 +150,13 @@ void return_regular_int32(int32 call_return)
 
     flat_buffer = flatcc_builder_finalize_aligned_buffer(B, &size);
     rv = nng_send(sock, flat_buffer, size, 0);
-    if (rv == 0)
+    if (rv != 0)
     {
-        //printf("return_regular_int32 - nng_send: %d\n", rv);
-    }
-    else
-    {
-        // TODO: Error event for NNG issues
-        printf("return_regular_int32 - Oh No! nng_send: %d\n", rv);
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                                  "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
 
-    /* free(buffer); */
     flatcc_builder_aligned_free(flat_buffer);
     /*
      * Reset, but keep allocated stack etc.,
@@ -187,18 +181,13 @@ void return_regular_uint32(uint32 call_return)
 
     flat_buffer = flatcc_builder_finalize_aligned_buffer(B, &size);
     rv = nng_send(sock, flat_buffer, size, 0);
-    if (rv == 0)
+    if (rv != 0)
     {
-        //printf("return_regular_int32 - nng_send: %d\n", rv);
-    }
-    else
-    {
-        // TODO: Error event for NNG issues
-        printf("return_regular_uint32 - Oh No! nng_send: %d\n", rv);
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                                  "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
 
-    /* free(buffer); */
     flatcc_builder_aligned_free(flat_buffer);
     /*
      * Reset, but keep allocated stack etc.,
@@ -223,18 +212,13 @@ void return_regular_int16(int16 call_return)
 
     flat_buffer = flatcc_builder_finalize_aligned_buffer(B, &size);
     rv = nng_send(sock, flat_buffer, size, 0);
-    if (rv == 0)
+    if (rv != 0)
     {
-        //printf("return_regular_int32 - nng_send: %d\n", rv);
-    }
-    else
-    {
-        // TODO: Error event for NNG issues
-        printf("return_regular_int16 - Oh No! nng_send: %d\n", rv);
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                                  "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
 
-    /* free(buffer); */
     flatcc_builder_aligned_free(flat_buffer);
     /*
      * Reset, but keep allocated stack etc.,
@@ -259,18 +243,13 @@ void return_regular_uint16(uint16 call_return)
 
     flat_buffer = flatcc_builder_finalize_aligned_buffer(B, &size);
     rv = nng_send(sock, flat_buffer, size, 0);
-    if (rv == 0)
+    if (rv != 0)
     {
-        //printf("return_regular_int32 - nng_send: %d\n", rv);
-    }
-    else
-    {
-        // TODO: Error event for NNG issues
-        printf("return_regular_uint16 - Oh No! nng_send: %d\n", rv);
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                                  "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
 
-    /* free(buffer); */
     flatcc_builder_aligned_free(flat_buffer);
     /*
      * Reset, but keep allocated stack etc.,
@@ -295,18 +274,13 @@ void return_regular_cFETime(CFE_TIME_SysTime_t time)
 
     flat_buffer = flatcc_builder_finalize_aligned_buffer(B, &size);
     rv = nng_send(sock, flat_buffer, size, 0);
-    if (rv == 0)
+    if (rv != 0)
     {
-        //printf("return_regular_int32 - nng_send: %d\n", rv);
-    }
-    else
-    {
-        // TODO: Error event for NNG issues
-        printf("return_regular_cFETime - Oh No! nng_send: %d\n", rv);
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                                  "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
 
-    /* free(buffer); */
     flatcc_builder_aligned_free(flat_buffer);
     /*
      * Reset, but keep allocated stack etc.,
@@ -396,7 +370,6 @@ void incoming_message(void)
                 uint16_t EventID = ns(SendEvent_EventID(sendEvent));
                 uint16_t EventType = ns(SendEvent_EventType(sendEvent));
                 const char *spec_string = ns(SendEvent_Spec(sendEvent));
-                // printf("RECEIVED \"%s\"\n", spec_string);
 
                 call_return = CFE_EVS_SendEvent(EventID, EventType, spec_string);
                 return_regular_int32(call_return);
@@ -411,7 +384,6 @@ void incoming_message(void)
                 uint16_t EventType = ns(SendEventWithAppID_EventType(sendEvent));
                 uint32_t AppID = ns(SendEventWithAppID_AppID(sendEvent));
                 const char *spec_string = ns(SendEventWithAppID_Spec(sendEvent));
-                // printf("RECEIVED \"%s\"\n", spec_string);
 
                 call_return = CFE_EVS_SendEventWithAppID(EventID, EventType, AppID, spec_string);
                 return_regular_int32(call_return);
@@ -430,7 +402,6 @@ void incoming_message(void)
                 uint16_t EventType = ns(SendTimedEvent_EventType(sendTimedEvent));
 
                 const char *spec_string = ns(SendTimedEvent_Spec(sendTimedEvent));
-                // printf("RECEIVED \"%s\"\n", spec_string);
 
                 call_return = CFE_EVS_SendTimedEvent(cfe_time, EventID, EventType, spec_string);
                 return_regular_int32(call_return);
@@ -448,7 +419,6 @@ void incoming_message(void)
                 size_t filter_len = ns(Filter_vec_len(filters));
 
                 CFE_EVS_BinFilter_t *new_filters;
-                // printf("Allocating filters! %d (should equal %d)\n", filter_len, NumFilteredEvents);
                 new_filters = malloc(filter_len * sizeof(CFE_EVS_BinFilter_t));
 
                 for (index = 0; index < filter_len; index++)
@@ -596,8 +566,8 @@ void incoming_message(void)
             }
 
             default:
-                // TODO: Event for unknown function
-                printf("ERROR: What function is that supposed to be?: %d\n", ns(RemoteCall_input_type(remoteCall)));
+                CFE_EVS_SendEventWithAppID(PROXY_UNIMPLEMENTED_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                                  "Proxy %s - unknown/unimplemented function: %d", __func__, ns(RemoteCall_input_type(remoteCall)));
         }
 
         nng_free(buffer, sz);
@@ -610,9 +580,8 @@ void incoming_message(void)
     else
     {
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
-
-        // TODO: event for nng issue
-        printf("ERROR: nng_recv failed: %d\n", rv);
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                                  "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
     }
 }
 
@@ -709,23 +678,26 @@ void PROXY_Init(void)
     // Wait for connection from actual application
     int rv;
 
-    // TODO: Event for NNG issues / error checking
     if ((rv = nng_pair0_open(&sock)) != 0)
     {
-        printf("nng_pair0_open: %d\n", rv);
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                                  "Proxy %s - nng_pair0_open error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
     // Listen doesn't timeout waiting for a connection.
     if ((rv = nng_listen(sock, IPC_PIPE_ADDRESS, NULL, 0)) !=0)
     {
-        printf("nng_listen: %d\n", rv);
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                                  "Proxy %s - nng_listen error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     } else {
-        printf("(PROXY) listening on %s\n", IPC_PIPE_ADDRESS);
+        CFE_EVS_SendEventWithAppID(PROXY_STARTUP_INF_EID, CFE_EVS_INFORMATION, proxy_evs_id,
+                                  "PROXY listening on %s", IPC_PIPE_ADDRESS);
     }
     if ((rv = nng_setopt_ms(sock, NNG_OPT_RECVTIMEO, ACTUAL_NNG_TIMEOUT)) != 0)
     {
-        printf("nng_setopt_ms: %d\n", rv);
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                                  "Proxy %s - nng_setopt_ms error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
 
@@ -763,13 +735,12 @@ void PROXY_ProcessCommandPacket(void)
 
         default:
             PROXY_HkTelemetryPkt.proxy_command_error_count++;
-            CFE_EVS_SendEventWithAppID(PROXY_COMMAND_ERR_EID,CFE_EVS_ERROR, proxy_evs_id,
-            "PROXY: invalid command packet, MID = 0x%x", MsgId);
+            CFE_EVS_SendEventWithAppID(PROXY_COMMAND_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                                      "PROXY: invalid command packet, MID = 0x%x", MsgId);
             break;
     }
 
     return;
-
 } /* End PROXY_ProcessCommandPacket */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
@@ -790,7 +761,7 @@ void PROXY_ProcessGroundCommand(void)
         case PROXY_NOOP_CC:
             PROXY_HkTelemetryPkt.proxy_command_count++;
             CFE_EVS_SendEventWithAppID(PROXY_COMMANDNOP_INF_EID, CFE_EVS_INFORMATION, proxy_evs_id,
-            "PROXY: NOOP command");
+                                      "PROXY: NOOP command");
             break;
 
         case PROXY_RESET_COUNTERS_CC:
@@ -827,7 +798,6 @@ void PROXY_ReportHousekeeping(void)
 /*  Purpose:                                                                  */
 /*         This function resets all the global counter variables that are     */
 /*         part of the task telemetry.                                        */
-/*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 void PROXY_ResetCounters(void)
 {
@@ -841,9 +811,7 @@ void PROXY_ResetCounters(void)
 } /* End of PROXY_ResetCounters() */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-/*                                                                            */
 /* PROXY_VerifyCmdLength() -- Verify command packet length                    */
-/*                                                                            */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 boolean PROXY_VerifyCmdLength(CFE_SB_MsgPtr_t msg, uint16 ExpectedLength)
 {
