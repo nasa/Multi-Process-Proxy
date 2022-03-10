@@ -58,14 +58,14 @@
 flatcc_builder_t   builder;
 proxy_hk_tlm_t     PROXY_HkTelemetryPkt;
 CFE_SB_PipeId_t    PROXY_CommandPipe;
-CFE_SB_MsgPtr_t    PROXY_MsgPtr;
+CFE_MSG_Message_t *    PROXY_MsgPtr;
 
 nng_socket sock;
 
 pid_t childPID;
 
 // APP ID for the proxy event app
-unsigned int proxy_evs_id = 88;
+CFE_ES_AppId_t proxy_evs_id; // TODO: init?
 
 static CFE_EVS_BinFilter_t  PROXY_EventFilters[] =
     {  /* Event ID    mask */
@@ -81,18 +81,18 @@ static CFE_EVS_BinFilter_t  PROXY_EventFilters[] =
 void PROXY_Main( void )
 {
     int32  status;
-    uint32 RunStatus = CFE_ES_APP_RUN;
+    uint32 RunStatus = CFE_ES_RunStatus_APP_RUN;
 
     CFE_ES_PerfLogEntry(PROXY_PERF_ID);
 
     PROXY_Init();
 
     // Main run loop
-    while (CFE_ES_RunLoop(&RunStatus) == TRUE)
+    while (CFE_ES_RunLoop(&RunStatus) == true)
     {
         // Two parts: check for proxy commands and check for messages from the actual app
 
-        status = CFE_SB_RcvMsg(&PROXY_MsgPtr, PROXY_CommandPipe, CFE_SB_POLL);
+        status = CFE_SB_ReceiveBuffer((CFE_SB_Buffer_t **)&PROXY_MsgPtr,  PROXY_CommandPipe,  CFE_SB_POLL);
 
         // TODO: Consider use of Perf markers
 
@@ -112,7 +112,7 @@ void PROXY_Main( void )
         incoming_message();
     }
 
-    CFE_EVS_SendEventWithAppID(PROXY_SHUTDOWN_INF_EID, CFE_EVS_INFORMATION, proxy_evs_id,
+    CFE_EVS_SendEventWithAppID(PROXY_SHUTDOWN_INF_EID, CFE_EVS_EventType_INFORMATION, proxy_evs_id,
                                "Pro Proxy Shutdown");
     kill(childPID, SIGKILL);
 
@@ -152,7 +152,7 @@ void return_regular_int32(int32 call_return)
     rv = nng_send(sock, flat_buffer, size, 0);
     if (rv != 0)
     {
-        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_EventType_ERROR, proxy_evs_id,
                                   "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
@@ -183,7 +183,7 @@ void return_regular_uint32(uint32 call_return)
     rv = nng_send(sock, flat_buffer, size, 0);
     if (rv != 0)
     {
-        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_EventType_ERROR, proxy_evs_id,
                                   "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
@@ -214,7 +214,7 @@ void return_regular_int16(int16 call_return)
     rv = nng_send(sock, flat_buffer, size, 0);
     if (rv != 0)
     {
-        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_EventType_ERROR, proxy_evs_id,
                                   "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
@@ -245,7 +245,7 @@ void return_regular_uint16(uint16 call_return)
     rv = nng_send(sock, flat_buffer, size, 0);
     if (rv != 0)
     {
-        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_EventType_ERROR, proxy_evs_id,
                                   "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
@@ -276,7 +276,7 @@ void return_regular_cFETime(CFE_TIME_SysTime_t time)
     rv = nng_send(sock, flat_buffer, size, 0);
     if (rv != 0)
     {
-        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_EventType_ERROR, proxy_evs_id,
                                   "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
@@ -383,9 +383,11 @@ void incoming_message(void)
                 uint16_t EventID = ns(SendEventWithAppID_EventID(sendEvent));
                 uint16_t EventType = ns(SendEventWithAppID_EventType(sendEvent));
                 uint32_t AppID = ns(SendEventWithAppID_AppID(sendEvent));
+                CFE_ES_AppId_t AppId_struct;
+                AppId_struct.id = CFE_ResourceId_FromInteger(AppID);
                 const char *spec_string = ns(SendEventWithAppID_Spec(sendEvent));
 
-                call_return = CFE_EVS_SendEventWithAppID(EventID, EventType, AppID, spec_string);
+                call_return = CFE_EVS_SendEventWithAppID(EventID, EventType, AppId_struct, spec_string);
                 return_regular_int32(call_return);
                 break;
             }
@@ -435,16 +437,7 @@ void incoming_message(void)
 
                 break;
             }
-            case ns(Function_Unregister):
-            {
-                if (VERBOSE) {printf("Unregsiter called\n");}
-
-                call_return = CFE_EVS_Unregister();
-
-                return_regular_int32(call_return);
-
-                break;
-            }
+            // TODO: remove EVS_Unregister
             case ns(Function_ResetFilter):
             {
                 if (VERBOSE) {printf("Reset Filter called\n");}
@@ -566,7 +559,7 @@ void incoming_message(void)
             }
 
             default:
-                CFE_EVS_SendEventWithAppID(PROXY_UNIMPLEMENTED_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+                CFE_EVS_SendEventWithAppID(PROXY_UNIMPLEMENTED_ERR_EID, CFE_EVS_EventType_ERROR, proxy_evs_id,
                                   "Proxy %s - unknown/unimplemented function: %d", __func__, ns(RemoteCall_input_type(remoteCall)));
         }
 
@@ -580,7 +573,7 @@ void incoming_message(void)
     else
     {
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
-        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_EventType_ERROR, proxy_evs_id,
                                   "Proxy %s - NNG error: %s", __func__, nng_strerror(rv));
     }
 }
@@ -596,7 +589,8 @@ void PROXY_Init(void)
     ** Register the app with Executive services
     ** The actual app noops on its ES_RegisterApp call
     */
-    CFE_ES_RegisterApp();
+    //  TODO: apps no longer register explicitly... okay for us?
+    // CFE_ES_RegisterApp;
 
     /*
     ** Register the events -
@@ -611,7 +605,7 @@ void PROXY_Init(void)
     CFE_SB_Subscribe(PROXY_CMD_MID, PROXY_CommandPipe);
     CFE_SB_Subscribe(PROXY_SEND_HK_MID, PROXY_CommandPipe);
 
-    CFE_SB_InitMsg(&PROXY_HkTelemetryPkt, PROXY_HK_TLM_MID, PROXY_HK_TLM_LNGTH, TRUE);
+    CFE_MSG_Init(&PROXY_HkTelemetryPkt.TlmHeader.Msg, PROXY_HK_TLM_MID, PROXY_HK_TLM_LNGTH);
 
     PROXY_HkTelemetryPkt.actual_run_state = ACTUAL_STATE_UNKOWN;
 
@@ -684,28 +678,28 @@ void PROXY_Init(void)
 
     if ((rv = nng_pair0_open(&sock)) != 0)
     {
-        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_EventType_ERROR, proxy_evs_id,
                                   "Proxy %s - nng_pair0_open error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
     // Listen doesn't timeout waiting for a connection.
     if ((rv = nng_listen(sock, IPC_PIPE_ADDRESS, NULL, 0)) !=0)
     {
-        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_EventType_ERROR, proxy_evs_id,
                                   "Proxy %s - nng_listen error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     } else {
-        CFE_EVS_SendEventWithAppID(PROXY_STARTUP_INF_EID, CFE_EVS_INFORMATION, proxy_evs_id,
+        CFE_EVS_SendEventWithAppID(PROXY_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, proxy_evs_id,
                                   "PROXY listening on %s", IPC_PIPE_ADDRESS);
     }
     if ((rv = nng_setopt_ms(sock, NNG_OPT_RECVTIMEO, ACTUAL_NNG_TIMEOUT)) != 0)
     {
-        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+        CFE_EVS_SendEventWithAppID(PROXY_NNG_ERR_EID, CFE_EVS_EventType_ERROR, proxy_evs_id,
                                   "Proxy %s - nng_setopt_ms error: %s", __func__, nng_strerror(rv));
         PROXY_HkTelemetryPkt.proxy_nng_error = rv;
     }
 
-    CFE_EVS_SendEventWithAppID(PROXY_STARTUP_INF_EID, CFE_EVS_INFORMATION, proxy_evs_id,
+    CFE_EVS_SendEventWithAppID(PROXY_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, proxy_evs_id,
                                "Pro Proxy Initialized. Version %d.%d.%d.%d",
                                PROXY_MAJOR_VERSION,
                                PROXY_MINOR_VERSION,
@@ -723,9 +717,9 @@ void PROXY_Init(void)
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 void PROXY_ProcessCommandPacket(void)
 {
-    CFE_SB_MsgId_t  MsgId;
+    CFE_SB_MsgId_t MsgId;
 
-    MsgId = CFE_SB_GetMsgId(PROXY_MsgPtr);
+    CFE_MSG_GetMsgId(PROXY_MsgPtr, &MsgId);
 
     switch (MsgId)
     {
@@ -739,7 +733,7 @@ void PROXY_ProcessCommandPacket(void)
 
         default:
             PROXY_HkTelemetryPkt.proxy_command_error_count++;
-            CFE_EVS_SendEventWithAppID(PROXY_COMMAND_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
+            CFE_EVS_SendEventWithAppID(PROXY_COMMAND_ERR_EID, CFE_EVS_EventType_ERROR, proxy_evs_id,
                                       "PROXY: invalid command packet, MID = 0x%x", MsgId);
             break;
     }
@@ -755,16 +749,16 @@ void PROXY_ProcessCommandPacket(void)
 
 void PROXY_ProcessGroundCommand(void)
 {
-    uint16 CommandCode;
+    CFE_MSG_FcnCode_t CommandCode;
 
-    CommandCode = CFE_SB_GetCmdCode(PROXY_MsgPtr);
+    CFE_MSG_GetFcnCode(PROXY_MsgPtr, &CommandCode);
 
     /* Process "known" PROXY ground commands */
     switch (CommandCode)
     {
         case PROXY_NOOP_CC:
             PROXY_HkTelemetryPkt.proxy_command_count++;
-            CFE_EVS_SendEventWithAppID(PROXY_COMMANDNOP_INF_EID, CFE_EVS_INFORMATION, proxy_evs_id,
+            CFE_EVS_SendEventWithAppID(PROXY_COMMANDNOP_INF_EID, CFE_EVS_EventType_INFORMATION, proxy_evs_id,
                                       "PROXY: NOOP command");
             break;
 
@@ -791,8 +785,8 @@ void PROXY_ProcessGroundCommand(void)
 /* * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * *  * *  * * * * */
 void PROXY_ReportHousekeeping(void)
 {
-    CFE_SB_TimeStampMsg((CFE_SB_Msg_t *) &PROXY_HkTelemetryPkt);
-    CFE_SB_SendMsg((CFE_SB_Msg_t *) &PROXY_HkTelemetryPkt);
+    CFE_SB_TimeStampMsg((CFE_MSG_Message_t *) &PROXY_HkTelemetryPkt);
+    CFE_SB_TransmitMsg((CFE_MSG_Message_t *) &PROXY_HkTelemetryPkt, true);
     return;
 } /* End of PROXY_ReportHousekeeping() */
 
@@ -809,7 +803,7 @@ void PROXY_ResetCounters(void)
     PROXY_HkTelemetryPkt.proxy_command_count       = 0;
     PROXY_HkTelemetryPkt.proxy_command_error_count = 0;
 
-    CFE_EVS_SendEventWithAppID(PROXY_COMMANDRST_INF_EID, CFE_EVS_INFORMATION, proxy_evs_id,
+    CFE_EVS_SendEventWithAppID(PROXY_COMMANDRST_INF_EID, CFE_EVS_EventType_INFORMATION, proxy_evs_id,
                       "PROXY: RESET command");
     return;
 } /* End of PROXY_ResetCounters() */
@@ -817,24 +811,28 @@ void PROXY_ResetCounters(void)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
 /* PROXY_VerifyCmdLength() -- Verify command packet length                    */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * **/
-boolean PROXY_VerifyCmdLength(CFE_SB_MsgPtr_t msg, uint16 ExpectedLength)
+bool PROXY_VerifyCmdLength(CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
 {
-    boolean result = TRUE;
+    bool              result       = true;
+    size_t            ActualLength = 0;
+    CFE_SB_MsgId_t    MsgId        = CFE_SB_INVALID_MSG_ID;
+    CFE_MSG_FcnCode_t FcnCode      = 0;
 
-    uint16 ActualLength = CFE_SB_GetTotalMsgLength(msg);
+    CFE_MSG_GetSize(MsgPtr, &ActualLength);
 
     /*
     ** Verify the command packet length.
     */
     if (ExpectedLength != ActualLength)
     {
-        CFE_SB_MsgId_t MessageID   = CFE_SB_GetMsgId(msg);
-        uint16         CommandCode = CFE_SB_GetCmdCode(msg);
+        CFE_MSG_GetMsgId(MsgPtr, &MsgId);
+        CFE_MSG_GetFcnCode(MsgPtr, &FcnCode);
 
-        CFE_EVS_SendEventWithAppID(PROXY_LEN_ERR_EID, CFE_EVS_ERROR, proxy_evs_id,
-                          "Invalid msg length: ID = 0x%X,  CC = %d, Len = %d, Expected = %d",
-                          MessageID, CommandCode, ActualLength, ExpectedLength);
-        result = FALSE;
+        CFE_EVS_SendEvent(PROXY_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
+                          "Invalid Msg length: ID = 0x%X,  CC = %u, Len = %zu, Expected = %zu",
+                          CFE_SB_MsgIdToValue(MsgId), FcnCode, ActualLength, ExpectedLength);
+
+        result = false;
         PROXY_HkTelemetryPkt.proxy_command_error_count++;
     }
 
