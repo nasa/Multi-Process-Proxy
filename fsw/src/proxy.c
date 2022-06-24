@@ -615,10 +615,13 @@ void PROXY_Init(void)
 
     PROXY_HkTelemetryPkt.actual_run_state = ACTUAL_STATE_UNKOWN;
 
-    sleep(1); // Give PEVS a change to start up
+    // Give PEVS a change to start up
+    // This function is typically called as the last line of the of the init function,
+    // but we want to be able to send event messages (via PEVS) so need it earlier
+    CFE_ES_WaitForStartupSync(2000);
 
     PROXY_HkTelemetryPkt.proxy_pevs_access = CFE_ES_GetAppIDByName(&proxy_evs_id, "PEVS");
-    printf("PROXY Attempts to find PEVS: 0x%04X - %d\n", PROXY_HkTelemetryPkt.proxy_pevs_access, proxy_evs_id);
+    // printf("PROXY Attempts to find PEVS: 0x%04X - %d\n", PROXY_HkTelemetryPkt.proxy_pevs_access, proxy_evs_id);
     if (PROXY_HkTelemetryPkt.proxy_pevs_access != CFE_SUCCESS)
     {
         // Can't exactly send a EVS message if this doesn't work. Not sure what else to do.
@@ -652,9 +655,10 @@ void PROXY_Init(void)
         printf("Fork error\n");
     }
 
-    // This code block is handy if the child process fails after the exec succeeds.
-    // Just waits on the process, prints the reason is died.
+    // This code block is for debugging the child process if it fails after the exec succeeds.
+    // It waits on the process and prints the reason is died.
     // Signal 11 (Seg Fault) may indicate you need to raise Proxy's stack size in the startup script
+    // DO NOT UNCOMMENT if the child process is not failing: the waitpid stops all progress of the parent
     /*
     int wstatus = 0;
     int w = waitpid(childPID, &wstatus, WUNTRACED | WCONTINUED);
