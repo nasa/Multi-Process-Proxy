@@ -384,7 +384,7 @@ void incoming_message(void)
                 uint16_t EventType = ns(SendEventWithAppID_EventType(sendEvent));
                 uint32_t AppID = ns(SendEventWithAppID_AppID(sendEvent));
                 CFE_ES_AppId_t AppId_struct;
-                AppId_struct.id = CFE_ResourceId_FromInteger(AppID);
+                AppId_struct = CFE_ResourceId_FromInteger(AppID);
                 const char *spec_string = ns(SendEventWithAppID_Spec(sendEvent));
 
                 call_return = CFE_EVS_SendEventWithAppID(EventID, EventType, AppId_struct, spec_string);
