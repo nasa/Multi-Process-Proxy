@@ -586,13 +586,6 @@ void incoming_message(void)
 void PROXY_Init(void)
 {
     /*
-    ** Register the app with Executive services
-    ** The actual app noops on its ES_RegisterApp call
-    */
-    //  TODO: apps no longer register explicitly... okay for us?
-    // CFE_ES_RegisterApp;
-
-    /*
     ** Register the events -
     ** The actual app will register with EVS. Proxy uses PEVS to send events.
     */
