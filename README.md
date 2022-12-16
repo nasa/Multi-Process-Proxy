@@ -1,7 +1,7 @@
 # proxy
 
 This is a cFS application that provides an interface to the core services.
-It is meant to be used with [https://github.com/nasa/Multi-Process-Proxy-Client](proxy_client).
+It is meant to be used with [proxy_client](https://github.com/nasa/Multi-Process-Proxy-Client).
 
 ## Configuration
 
