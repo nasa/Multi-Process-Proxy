@@ -1,6 +1,7 @@
 # proxy
 
-This is a cFS application that provides an interface to the core services. It is meant to be used with [https://aetd-git.gsfc.nasa.gov/cFS_lab/proxy_client/](proxy_client).
+This is a cFS application that provides an interface to the core services.
+It is meant to be used with [https://github.com/nasa/Multi-Process-Proxy-Client](proxy_client).
 
 ## Configuration
 
