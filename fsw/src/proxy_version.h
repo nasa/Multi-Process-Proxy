@@ -14,7 +14,7 @@
 #define proxy_version_h
 
 #define PROXY_MAJOR_VERSION    1
-#define PROXY_MINOR_VERSION    0
+#define PROXY_MINOR_VERSION    1
 #define PROXY_REVISION         0
 #define PROXY_MISSION_REV      0
 

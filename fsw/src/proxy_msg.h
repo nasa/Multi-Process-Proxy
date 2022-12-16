@@ -25,7 +25,7 @@
 */
 typedef struct
 {
-   uint8    CmdHeader[CFE_SB_CMD_HDR_SIZE];
+   uint8    CmdHeader[sizeof(CFE_MSG_CommandHeader_t)];
 
 } PROXY_NoArgsCmd_t;
 
@@ -37,7 +37,7 @@ typedef struct
 */
 typedef struct
 {
-    uint8              TlmHeader[CFE_SB_TLM_HDR_SIZE];
+    CFE_MSG_TelemetryHeader_t TlmHeader;
     uint8              proxy_command_error_count;
     uint8              proxy_command_count;
 
@@ -52,7 +52,7 @@ typedef struct
     uint32             actual_func_calls;
     uint32             actual_reset_count;
     uint32             actual_ms_last_msg;
-}   OS_PACK proxy_hk_tlm_t  ;
+}   __attribute__((packed)) proxy_hk_tlm_t  ;
 
 #define PROXY_HK_TLM_LNGTH   sizeof ( proxy_hk_tlm_t )
 

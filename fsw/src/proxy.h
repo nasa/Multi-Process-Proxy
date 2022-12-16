@@ -51,6 +51,6 @@ void PROXY_ResetCounters(void);
 void cleanup_and_exit(uint32 RunStatus);
 
 void incoming_message(void);
-boolean PROXY_VerifyCmdLength(CFE_SB_MsgPtr_t msg, uint16 ExpectedLength);
+bool PROXY_VerifyCmdLength(CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
 
 #endif /* proxy_h */
