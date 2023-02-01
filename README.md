@@ -1,7 +1,8 @@
 # proxy
 
 This is a cFS application that provides an interface to the core services.
-It is meant to be used with [proxy_client](https://github.com/nasa/Multi-Process-Proxy-Client).
+
+See [Multi-Process Proxy Client](https://github.com/nasa/Multi-Process-Proxy-Client) for usage and contribution instructions.
 
 ## Configuration
 
@@ -11,4 +12,6 @@ This is so the proxy client can load libraries in "./cf/".
 
 The program to run as a process is set by `EXEC_INSTRUCTION`, and the command line arguments (`EXEC_ARGUMENTS`) should start with the program name.
 
-## Dependencies
+## License and Copyright
+
+Please refer to [NOSA GSC-18364-1.pdf](NOSA%20GSC-18364-1.pdf) and [COPYRIGHT](COPYRIGHT).
